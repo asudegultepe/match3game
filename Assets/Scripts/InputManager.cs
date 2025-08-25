@@ -16,7 +16,7 @@ public class InputManager : MonoBehaviour
     {
         mainCamera = Camera.main;
         if (mainCamera == null)
-            mainCamera = FindObjectOfType<Camera>();
+            mainCamera = FindFirstObjectByType<Camera>();
     }
     
     private void Update()

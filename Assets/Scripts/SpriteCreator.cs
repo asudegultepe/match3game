@@ -41,7 +41,7 @@ public class SpriteCreator : MonoBehaviour
         Debug.Log("Tüm sprite'lar oluşturuldu!");
         
         // GameBoard'a sprite'ları aktar
-        GameBoard gameBoard = FindObjectOfType<GameBoard>();
+        GameBoard gameBoard = FindFirstObjectByType<GameBoard>();
         if (gameBoard != null)
         {
             // Inspector'dan manuel olarak atanması gerek

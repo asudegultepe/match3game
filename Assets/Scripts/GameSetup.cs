@@ -68,14 +68,21 @@ public class GameSetup : MonoBehaviour
         }
         
         // Create InputManager if it doesn't exist
-        if (FindObjectOfType<InputManager>() == null)
+        if (FindFirstObjectByType<InputManager>() == null)
         {
             GameObject inputManagerObj = new GameObject("InputManager");
             inputManagerObj.AddComponent<InputManager>();
         }
         
+        // Create LevelManager if it doesn't exist
+        if (LevelManager.Instance == null)
+        {
+            GameObject levelManagerObj = new GameObject("LevelManager");
+            levelManagerObj.AddComponent<LevelManager>();
+        }
+        
         // Create UIManager if it doesn't exist
-        if (UIManager.Instance == null && FindObjectOfType<Canvas>() != null)
+        if (UIManager.Instance == null && FindFirstObjectByType<Canvas>() != null)
         {
             GameObject uiManagerObj = new GameObject("UIManager");
             uiManagerObj.AddComponent<UIManager>();
@@ -107,7 +114,7 @@ public class GameSetup : MonoBehaviour
     public void SetupSpritesForGameBoard()
     {
         // SpriteCreator oluştur veya bul
-        SpriteCreator spriteCreator = FindObjectOfType<SpriteCreator>();
+        SpriteCreator spriteCreator = FindFirstObjectByType<SpriteCreator>();
         if (spriteCreator == null)
         {
             GameObject creatorObj = new GameObject("SpriteCreator");
@@ -118,7 +125,7 @@ public class GameSetup : MonoBehaviour
         spriteCreator.CreateAllPieceSprites();
         
         // GameBoard'a sprite'ları ata
-        GameBoard gameBoard = FindObjectOfType<GameBoard>();
+        GameBoard gameBoard = FindFirstObjectByType<GameBoard>();
         if (gameBoard != null)
         {
             Debug.Log("GameBoard bulundu! Şimdi Inspector'da Piece Sprites alanını SpriteCreator'dan kopyala.");

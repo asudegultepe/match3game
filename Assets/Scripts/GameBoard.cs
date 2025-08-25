@@ -209,6 +209,13 @@ public class GameBoard : MonoBehaviour
         if (isProcessingMatches)
             return false;
         
+        // Check if level is active
+        if (LevelManager.Instance != null && !LevelManager.Instance.IsLevelActive)
+        {
+            Debug.Log("GameBoard: Cannot make moves - level not active");
+            return false;
+        }
+        
         // Check if pieces are adjacent
         if (Mathf.Abs(x1 - x2) + Mathf.Abs(y1 - y2) != 1)
             return false;

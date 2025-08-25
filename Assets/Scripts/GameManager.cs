@@ -55,6 +55,14 @@ public class GameManager : MonoBehaviour
         // Wait a frame to ensure all components are ready
         yield return null;
         
+        // Create level manager if it doesn't exist
+        if (LevelManager.Instance == null)
+        {
+            GameObject levelManagerObj = new GameObject("LevelManager");
+            levelManagerObj.AddComponent<LevelManager>();
+            Debug.Log("GameManager: Created LevelManager");
+        }
+        
         // Create game board if it doesn't exist
         if (GameBoard.Instance == null && gameBoardPrefab != null)
         {
@@ -62,13 +70,13 @@ public class GameManager : MonoBehaviour
         }
         
         // Create input manager if it doesn't exist
-        if (FindObjectOfType<InputManager>() == null && inputManagerPrefab != null)
+        if (FindFirstObjectByType<InputManager>() == null && inputManagerPrefab != null)
         {
             Instantiate(inputManagerPrefab);
         }
         
         // Create UI canvas if it doesn't exist
-        if (FindObjectOfType<Canvas>() == null && uiCanvasPrefab != null)
+        if (FindFirstObjectByType<Canvas>() == null && uiCanvasPrefab != null)
         {
             Instantiate(uiCanvasPrefab);
         }
@@ -110,6 +118,7 @@ public class GameManager : MonoBehaviour
     
     public void OnPieceMatched(int pieceCount, bool isCombo)
     {
+        Debug.Log($"GameManager: Pieces matched: {pieceCount}, Combo: {isCombo}");
         if (ScoreManager.Instance != null)
         {
             ScoreManager.Instance.AddScore(pieceCount, isCombo);
@@ -118,6 +127,7 @@ public class GameManager : MonoBehaviour
     
     public void OnMoveUsed()
     {
+        Debug.Log("GameManager: Move used");
         if (ScoreManager.Instance != null)
         {
             ScoreManager.Instance.UseMove();
