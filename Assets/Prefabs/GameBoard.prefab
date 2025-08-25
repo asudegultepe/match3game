@@ -46,6 +46,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Match3Game.Scripts::GameBoard
   boardWidth: 8
   boardHeight: 8
-  pieceSpacing: 1
+  pieceSpacing: 0.6
   piecePrefab: {fileID: 1789893796482130157, guid: a4b94f79a782b9540ad9090d51bb0b47, type: 3}
   boardParent: {fileID: 0}
