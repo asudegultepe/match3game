@@ -31,68 +31,6 @@ Assets/
 └── Animations/      # Animation clips
 ```
 
-## Setup Instructions
-
-### 1. Unity Setup
-1. Open Unity Hub and create a new 2D project
-2. Import the scripts from the Assets/Scripts folder
-3. Make sure Universal Render Pipeline (URP) is set up (already configured)
-
-### 2. Create Game Prefabs
-
-#### GamePiece Prefab:
-1. Create an empty GameObject named "GamePiece"
-2. Add a SpriteRenderer component
-3. Add a Circle Collider2D component
-4. Attach the GamePiece script
-5. Create a simple colored circle sprite or use Unity's default sprite
-6. Save as prefab in Assets/Prefabs/
-
-#### GameBoard Prefab:
-1. Create an empty GameObject named "GameBoard"
-2. Attach the GameBoard script
-3. Set the piecePrefab field to your GamePiece prefab
-4. Configure board dimensions (default: 8x8)
-5. Save as prefab
-
-#### UI Canvas:
-1. Create a Canvas (UI -> Canvas)
-2. Add UI elements:
-   - Score text (Top left)
-   - Level text (Top center)
-   - Moves text (Top right)
-   - Pause button
-3. Attach UIManager script to a UI Manager GameObject
-4. Connect UI elements to the script fields
-
-### 3. Scene Setup
-1. Open the SampleScene
-2. Set up the camera for 2D orthographic view
-3. Position camera to center the game board
-4. Add the GameBoard prefab to the scene
-5. Add UI Canvas
-6. Create GameManager GameObject and attach GameManager script
-7. Create EffectsManager GameObject for visual effects
-8. Create ScoreManager GameObject for score management
-
-### 4. Input System Setup
-1. The project uses Unity's new Input System
-2. Create InputManager GameObject and attach InputManager script
-3. Make sure the main camera is tagged as "MainCamera"
-
-### 5. Audio Setup (Optional)
-1. Add AudioSource component to EffectsManager
-2. Import audio clips for:
-   - Match sounds
-   - Combo sounds
-   - Swap sounds
-3. Assign clips in EffectsManager script
-
-### 6. Visual Effects Setup (Optional)
-1. Create simple particle systems for match effects
-2. Assign to EffectsManager script
-3. Customize colors and behaviors
-
 ## How to Play
 
 1. **Objective**: Match 3 or more pieces of the same color
