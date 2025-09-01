@@ -49,3 +49,19 @@ MonoBehaviour:
   pieceSpacing: 0.6
   piecePrefab: {fileID: 1789893796482130157, guid: a4b94f79a782b9540ad9090d51bb0b47, type: 3}
   boardParent: {fileID: 0}
+  pieceSprites:
+    redSprite: {fileID: -136726104210694165, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    blueSprite: {fileID: 1348279144050491587, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    greenSprite: {fileID: -7789607092191370913, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    yellowSprite: {fileID: -2267084645064925693, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    purpleSprite: {fileID: 2710043610500883614, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    orangeSprite: {fileID: 0}
+    redStripedSprite: {fileID: 1911050579005458014, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    blueStripedSprite: {fileID: -1240936527865569021, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    greenStripedSprite: {fileID: -2870013638577511251, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    yellowStripedSprite: {fileID: 7597333960065793288, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    purpleStripedSprite: {fileID: 2096574264646072115, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    orangeStripedSprite: {fileID: 0}
+    bombSprite: {fileID: -922446305, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    rowClearSprite: {fileID: -1104450507, guid: 97f8829d0d331754ca537c4db170c202, type: 3}
+    colClearSprite: {fileID: -2048712744, guid: 97f8829d0d331754ca537c4db170c202, type: 3}

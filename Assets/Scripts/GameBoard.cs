@@ -144,7 +144,8 @@ public class GameBoard : MonoBehaviour
     {
         List<PieceType> availableTypes = new List<PieceType>();
         
-        for (int i = 0; i < System.Enum.GetValues(typeof(PieceType)).Length; i++)
+        // Only consider normal pieces (0-5), not striped or special pieces
+        for (int i = 0; i < 6; i++)
         {
             PieceType type = (PieceType)i;
             if (!WouldCreateMatch(x, y, type))
@@ -155,7 +156,8 @@ public class GameBoard : MonoBehaviour
         
         if (availableTypes.Count == 0)
         {
-            return (PieceType)Random.Range(0, System.Enum.GetValues(typeof(PieceType)).Length);
+            // Fallback: return a random normal piece (0-5)
+            return (PieceType)Random.Range(0, 6);
         }
         
         return availableTypes[Random.Range(0, availableTypes.Count)];
@@ -250,33 +252,45 @@ public class GameBoard : MonoBehaviour
         
         yield return new WaitForSeconds(0.3f);
         
-        // Check for matches
-        List<GamePiece> matches = FindAllMatches();
+        // Check if either piece is special and handle accordingly
+        bool piece1Special = piece1.IsSpecial;
+        bool piece2Special = piece2.IsSpecial;
         
-        if (matches.Count == 0)
+        if (piece1Special || piece2Special)
         {
-            // Swap back if no matches
-            pieces[x1, y1] = piece1;
-            pieces[x2, y2] = piece2;
-            piece1.GridX = x1;
-            piece1.GridY = y1;
-            piece2.GridX = x2;
-            piece2.GridY = y2;
-            
-            piece1.MoveTo(GetWorldPosition(x1, y1), 0.3f);
-            piece2.MoveTo(GetWorldPosition(x2, y2), 0.3f);
-            
-            yield return new WaitForSeconds(0.3f);
+            // Handle special piece activation
+            yield return StartCoroutine(HandleSpecialPieceSwap(piece1, piece2));
         }
         else
         {
-            // Use a move when a successful swap is made
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.OnMoveUsed();
-            }
+            // Check for normal matches
+            List<GamePiece> matches = FindAllMatches();
             
-            yield return StartCoroutine(ProcessMatches());
+            if (matches.Count == 0)
+            {
+                // Swap back if no matches
+                pieces[x1, y1] = piece1;
+                pieces[x2, y2] = piece2;
+                piece1.GridX = x1;
+                piece1.GridY = y1;
+                piece2.GridX = x2;
+                piece2.GridY = y2;
+                
+                piece1.MoveTo(GetWorldPosition(x1, y1), 0.3f);
+                piece2.MoveTo(GetWorldPosition(x2, y2), 0.3f);
+                
+                yield return new WaitForSeconds(0.3f);
+            }
+            else
+            {
+                // Use a move when a successful swap is made
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.OnMoveUsed();
+                }
+                
+                yield return StartCoroutine(ProcessMatches());
+            }
         }
         
         isProcessingMatches = false;
@@ -349,6 +363,220 @@ public class GameBoard : MonoBehaviour
         return new List<GamePiece>(matchedPieces);
     }
     
+    private GamePiece CreateSpecialPieceFromMatch(List<GamePiece> matches, bool isCombo)
+    {
+        if (matches.Count < 4) return null; // Sadece 4+ eşleştirmede özel parça oluştur
+        
+        // En merkezi pozisyonu bul
+        Vector2 center = Vector2.zero;
+        foreach (GamePiece piece in matches)
+        {
+            center += new Vector2(piece.GridX, piece.GridY);
+        }
+        center /= matches.Count;
+        
+        // En yakın parçayı bul
+        GamePiece centerPiece = matches[0];
+        float minDistance = Vector2.Distance(new Vector2(centerPiece.GridX, centerPiece.GridY), center);
+        
+        foreach (GamePiece piece in matches)
+        {
+            float distance = Vector2.Distance(new Vector2(piece.GridX, piece.GridY), center);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                centerPiece = piece;
+            }
+        }
+        
+        // Özel parça tipini belirle
+        PieceType specialType = DetermineSpecialPieceType(matches, isCombo);
+        
+        Debug.Log($"Creating special piece: {specialType} at ({centerPiece.GridX}, {centerPiece.GridY}) from {matches.Count} matches, combo: {isCombo}");
+        
+        // Merkezi parçayı özel parçaya dönüştür (silme listesinden çıkar)
+        matches.Remove(centerPiece);
+        
+        // Yeni özel parçayı oluştur
+        centerPiece.Initialize(specialType, centerPiece.GridX, centerPiece.GridY);
+        
+        return centerPiece;
+    }
+    
+    private PieceType DetermineSpecialPieceType(List<GamePiece> matches, bool isCombo)
+    {
+        // İlk parçanın rengini al (çizgili şeker için)
+        PieceType baseColor = matches[0].GetBaseColor();
+        
+        Debug.Log($"DetermineSpecialPieceType: {matches.Count} matches, baseColor: {baseColor}, isCombo: {isCombo}");
+        
+        // Combo ise her zaman bomba yap
+        if (isCombo)
+        {
+            return PieceType.Bomb;
+        }
+        
+        // Eşleştirme sayısına göre özel parça tipi belirle
+        if (matches.Count >= 6)
+        {
+            return PieceType.Bomb; // 6+ parça = Bomba
+        }
+        else if (matches.Count == 5)
+        {
+            return Random.Range(0, 2) == 0 ? PieceType.RowClear : PieceType.ColClear; // 5 parça = Satır/Sütun temizleyici
+        }
+        else if (matches.Count == 4)
+        {
+            // 4'lü eşleştirme = Çizgili şeker (hangi renk eşleştirildiyse o rengin çizgili hali)
+            PieceType stripedType = GamePiece.GetStripedVersion(baseColor);
+            Debug.Log($"Creating striped piece: {stripedType} from base color: {baseColor}");
+            return stripedType;
+        }
+        
+        return PieceType.Bomb; // Varsayılan
+    }
+    
+    private IEnumerator HandleSpecialPieceSwap(GamePiece piece1, GamePiece piece2)
+    {
+        Debug.Log($"Special piece swap: {piece1.Type} at ({piece1.GridX},{piece1.GridY}) with {piece2.Type} at ({piece2.GridX},{piece2.GridY})");
+        
+        List<GamePiece> piecesToDestroy = new List<GamePiece>();
+        
+        // Her özel parça için etki alanını hesapla
+        if (piece1.IsSpecial)
+        {
+            piecesToDestroy.AddRange(GetSpecialPieceEffect(piece1));
+        }
+        
+        if (piece2.IsSpecial)
+        {
+            piecesToDestroy.AddRange(GetSpecialPieceEffect(piece2));
+        }
+        
+        // Tekrarları temizle
+        piecesToDestroy = new List<GamePiece>(new HashSet<GamePiece>(piecesToDestroy));
+        
+        Debug.Log($"Special pieces will destroy {piecesToDestroy.Count} pieces");
+        
+        // Skorlama
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnPieceMatched(piecesToDestroy.Count, true); // Special piece her zaman combo sayılır
+        }
+        
+        // Etki gösterisi
+        if (EffectsManager.Instance != null)
+        {
+            Vector3 effectPos1 = GetWorldPosition(piece1.GridX, piece1.GridY);
+            Vector3 effectPos2 = GetWorldPosition(piece2.GridX, piece2.GridY);
+            EffectsManager.Instance.PlayMatchEffect(effectPos1, piecesToDestroy.Count, true);
+            EffectsManager.Instance.PlayMatchEffect(effectPos2, piecesToDestroy.Count, true);
+        }
+        
+        // Parçaları yok et
+        foreach (GamePiece piece in piecesToDestroy)
+        {
+            if (piece != null)
+            {
+                pieces[piece.GridX, piece.GridY] = null;
+                Destroy(piece.gameObject);
+            }
+        }
+        
+        yield return new WaitForSeconds(0.5f);
+        
+        // Boş alanları doldur
+        yield return StartCoroutine(FillBoard());
+        
+        // Yeni eşleştirmeleri işle
+        yield return StartCoroutine(ProcessMatches());
+    }
+    
+    private List<GamePiece> GetSpecialPieceEffect(GamePiece specialPiece)
+    {
+        List<GamePiece> affected = new List<GamePiece>();
+        int x = specialPiece.GridX;
+        int y = specialPiece.GridY;
+        
+        if (specialPiece.IsStriped)
+        {
+            // Çizgili şeker - etrafındaki 4 parçayı patlatır (+ şekli)
+            // Üst
+            if (IsValidPosition(x, y + 1) && pieces[x, y + 1] != null)
+                affected.Add(pieces[x, y + 1]);
+            // Alt  
+            if (IsValidPosition(x, y - 1) && pieces[x, y - 1] != null)
+                affected.Add(pieces[x, y - 1]);
+            // Sol
+            if (IsValidPosition(x - 1, y) && pieces[x - 1, y] != null)
+                affected.Add(pieces[x - 1, y]);
+            // Sağ
+            if (IsValidPosition(x + 1, y) && pieces[x + 1, y] != null)
+                affected.Add(pieces[x + 1, y]);
+            // Kendisi
+            affected.Add(specialPiece);
+        }
+        else
+        {
+            switch (specialPiece.Type)
+            {
+                case PieceType.Bomb:
+                    // Bomba - + şeklinde patlatır (üst/alt/sol/sağ 4'er parça)
+                    // Üst 4 parça
+                    for (int i = 1; i <= 4; i++)
+                    {
+                        if (IsValidPosition(x, y + i) && pieces[x, y + i] != null)
+                            affected.Add(pieces[x, y + i]);
+                    }
+                    // Alt 4 parça  
+                    for (int i = 1; i <= 4; i++)
+                    {
+                        if (IsValidPosition(x, y - i) && pieces[x, y - i] != null)
+                            affected.Add(pieces[x, y - i]);
+                    }
+                    // Sol 4 parça
+                    for (int i = 1; i <= 4; i++)
+                    {
+                        if (IsValidPosition(x - i, y) && pieces[x - i, y] != null)
+                            affected.Add(pieces[x - i, y]);
+                    }
+                    // Sağ 4 parça
+                    for (int i = 1; i <= 4; i++)
+                    {
+                        if (IsValidPosition(x + i, y) && pieces[x + i, y] != null)
+                            affected.Add(pieces[x + i, y]);
+                    }
+                    // Kendisi
+                    affected.Add(specialPiece);
+                    break;
+                    
+                case PieceType.RowClear:
+                    // Tüm satırı temizle
+                    for (int i = 0; i < boardWidth; i++)
+                    {
+                        if (pieces[i, y] != null)
+                        {
+                            affected.Add(pieces[i, y]);
+                        }
+                    }
+                    break;
+                    
+                case PieceType.ColClear:
+                    // Tüm sütunu temizle
+                    for (int i = 0; i < boardHeight; i++)
+                    {
+                        if (pieces[x, i] != null)
+                        {
+                            affected.Add(pieces[x, i]);
+                        }
+                    }
+                    break;
+            }
+        }
+        
+        return affected;
+    }
+    
     private IEnumerator ProcessMatches()
     {
         List<GamePiece> matches = FindAllMatches();
@@ -356,6 +584,9 @@ public class GameBoard : MonoBehaviour
         
         while (matches.Count > 0)
         {
+            // Check for special piece creation before destroying matches
+            GamePiece specialPiece = CreateSpecialPieceFromMatch(matches, isCombo);
+            
             // Add score for matches
             if (GameManager.Instance != null)
             {
@@ -448,7 +679,8 @@ public class GameBoard : MonoBehaviour
                         piece = pieceObject.AddComponent<GamePiece>();
                     }
                     
-                    PieceType randomType = (PieceType)Random.Range(0, System.Enum.GetValues(typeof(PieceType)).Length);
+                    // Only generate normal pieces (0-5), not special or striped pieces
+                    PieceType randomType = (PieceType)Random.Range(0, 6);
                     piece.Initialize(randomType, x, y);
                     pieces[x, y] = piece;
                     
